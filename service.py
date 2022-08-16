@@ -7,6 +7,9 @@
 import repository
 import utils
 
+repo = repository.Repository()
+buffer = repository.Buffer(repo)
+
 
 def generatePassword(length=10, char_type=4):
     pass
@@ -26,11 +29,3 @@ def searchPassword(identifier):
 
 def recallId(note):
     pass
-
-
-def register(key):
-    repository.register(utils.hash_sha3_512(key))
-
-
-def authenticate(key):
-    return repository.login(utils.hash_sha3_512(key))

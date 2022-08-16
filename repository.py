@@ -6,8 +6,10 @@
 """
 import yaml
 import os
-
 os.chdir(os.path.split(os.path.realpath(__file__))[0])
+
+from Cryptodome.Hash import SHA3_512
+from Cryptodome.Cipher import AES
 
 config = {}
 
@@ -29,6 +31,23 @@ def writeConfig():
 
 
 class Buffer:
+    data: list
+
+    def __init__(self, repository):
+        self.data = repository.toBuffer()
+
+    def insertPassword(self, identifier, password, note=''):
+        print(1)
+        pass
+
+    def getPasswordById(self, identifier):
+        pass
+
+    def getIdByNote(self, identifier):
+        pass
+
+
+class Repository:
     keys: list
     values: list
 
@@ -36,23 +55,18 @@ class Buffer:
         self.backup()
         self.read()
 
-    def insertPassword(self, identifier, password, note=''):
-        print(1)
-        pass
-
     def read(self) -> None:
-        with open(config.key_filename, "r", encoding="utf-8") as f:
+        with open(config['key_filename'], 'r', encoding='utf-8') as f:
             self.keys = f.readlines()
-        with open(config.value_filename, "r", encoding="utf-8") as f:
+        with open(config['value_filename'], 'r', encoding='utf-8') as f:
             self.values = f.readlines()
 
     def write(self) -> None:
-        with open(config.key_filename, "w", encoding="utf-8") as f:
-            f.write(self.keys.join('\n'))
-        with open(config.value_filename, "w", encoding="utf-8") as f:
-            f.write(self.keys.join('\n'))
-
-        if (self.check()):
+        if self.check():
+            with open(config['key_filename'], 'w', encoding='utf-8') as f:
+                f.write(self.keys.join('\n'))
+            with open(config['value_filename'], 'w', encoding='utf-8') as f:
+                f.write(self.keys.join('\n'))
             self.removeBackup()
         else:
             pass
@@ -67,22 +81,13 @@ class Buffer:
         pass
 
     def encode(self):
-        pass
+        key = b'Sixteen byte key'
+        cipher = AES.new(key, AES.MODE_EAX)
+        nonce = cipher.nonce
+        ciphertext, tag = cipher.encrypt_and_digest(data)
 
     def decode(self):
         pass
 
-    def getPasswordById(self, identifier):
+    def toBuffer(self):
         pass
-
-    def getIdByNote(self, identifier):
-        pass
-
-
-def register(key):
-    config['key'] = key
-    writeConfig()
-
-
-def login(key):
-    return key == config['key']

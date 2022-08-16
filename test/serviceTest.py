@@ -6,14 +6,10 @@
 """
 import pytest
 import service
+from Cryptodome.Hash import SHA3_224
+import utils
 
 
-def test_register():
-    key = '123456ab'
-    service.register(key)
-
-
-def test_authenticate():
-    key = '123456ab'
-    assert service.authenticate(key)
-    assert not service.authenticate(key + '1')
+def test_hash():
+    key = utils.hashUpdateDigest(SHA3_224, '123456ab')
+    print(key)
