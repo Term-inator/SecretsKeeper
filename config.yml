@@ -1,2 +1,10 @@
 key_filename: ./key.txt
+nonce1: !!binary |
+  sz4EUT2YkBUdPD1/fbyE9Q==
+nonce2: !!binary |
+  6t5AQCj4y3gA/8O5TIHvKg==
+tag1: !!binary |
+  mifhHbzknRrqTX0LB9pGnQ==
+tag2: !!binary |
+  jkueQmfTTMOCcCDiXWs4Gg==
 value_filename: ./val.txt

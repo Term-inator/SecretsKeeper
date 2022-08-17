@@ -7,8 +7,8 @@
 import repository
 import utils
 
-repo = repository.Repository()
-buffer = repository.Buffer(repo)
+database = repository.Database()
+buffer = repository.Repository(database)
 
 
 def generatePassword(length=10, char_type=4):
