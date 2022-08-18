@@ -13,11 +13,26 @@ from Cryptodome.Hash import SHA3_224, BLAKE2b
 import utils
 
 
+database = repository.Database()
+key1 = '123456ab'
+key2 = 'ab123456'
+database.setKey(key1, key2)
+database.decode()
+repo = repository.Repository(database)
+
+
 def test_encode_decode():
-    repo = repository.Database()
-    repo.decode('123456ab', 'ab123456')
-    # repo.getKeys().append('123')
-    # repo.getKeys().append('abc')
-    # repo.getValues().append('456')
-    # repo.getValues().append('efg')
-    repo.encode()
+    database.decode()
+    # repo.getKeys().append(['123', 'adc', 'asd'])
+    # repo.getKeys().append(['2', 'abc', 'fgh'])
+    # repo.getValues().append(['2', 'jkl'])
+    # repo.getValues().append(['123', 'efg'])
+    database.encode()
+
+
+def test_toRepository():
+    print(database.toRepository())
+
+
+def test_getPasswordById():
+    print(repo.query(note='b'))

@@ -8,7 +8,7 @@ import repository
 import utils
 
 database = repository.Database()
-buffer = repository.Repository(database)
+repo = repository.Repository(database)
 
 
 def generatePassword(length=10, char_type=4):
@@ -23,8 +23,8 @@ def removePassword(identifier):
     pass
 
 
-def searchPassword(identifier):
-    pass
+def searchPassword(identifier: str):
+    return repo.getPasswordById(identifier)
 
 
 def recallId(note):
