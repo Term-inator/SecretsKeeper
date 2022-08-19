@@ -43,6 +43,9 @@ class Repository:
         self.data, self.identifier = database.toRepository()
         self.identifier += 1
 
+    def _getRecordById(self, identifier: str):
+        return self.data[identifier]
+
     def insertPassword(self, url: str, password: str, note: str = ''):
         # TODO check existence
         self.data[str(self.identifier)] = [str(self.identifier), url, note, password]
@@ -79,7 +82,7 @@ class Repository:
                 ids.add(i)
         res = []
         for identifier in ids:
-            res.append(self._getPasswordById(identifier))
+            res.append(self._getRecordById(identifier))
         return res
 
 
