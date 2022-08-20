@@ -102,6 +102,7 @@ class Database:
     def setKey(self, key1: str, key2: str):
         self.key1 = utils.hashUpdateDigest(BLAKE2b.new(digest_bits=128), key1).encode()
         self.key2 = utils.hashUpdateDigest(BLAKE2b.new(digest_bits=128), key2).encode()
+        self.decode()
 
     def read(self) -> None:
         with open(config['key_filename'], 'rb') as f:
