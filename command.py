@@ -20,18 +20,24 @@ class Command:
 class LoginCmd(Command):
     name = 'login'
 
-    def execute(self, params: List[str] = None):
+    def execute(self, params: List[str] = None) -> bool:
         key1 = input('key1: ')
         key2 = input('key2: ')
-        service.login(key1, key2)
+        return service.login(key1, key2)
 
 
 class LogoutCmd(Command):
     name = 'logout'
-    alias = ['exit']
 
     def execute(self, params: List[str] = None):
         print('logout...')
+
+
+class ExitCmd(Command):
+    name = 'exit'
+
+    def execute(self, params: List[str] = None):
+        print('exiting...')
 
 
 class LsCmd(Command):

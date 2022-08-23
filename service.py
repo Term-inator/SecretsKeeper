@@ -12,11 +12,23 @@ class Service:
     database = None
     repo = None
 
+    def _reset(self):
+        self.database = None
+        self.repo = None
+
+    def logout(self):
+        # TODO encode & write
+        self._reset()
+
     def login(self, key1, key2):
         print('login')
-        self.database = repository.Database()
-        self.database.setKey(key1, key2)
-        self.repo = repository.Repository(self.database)
+        try:
+            self.database = repository.Database()
+            self.database.setKey(key1, key2)
+            self.repo = repository.Repository(self.database)
+            return True
+        except ValueError:
+            return False
 
     def generatePassword(self, length=10, char_type=4):
         pass

@@ -87,8 +87,8 @@ class Repository:
 
 
 class Database:
-    keys: List[List[str]] = []
-    values: List[List[str]] = []
+    keys: List[List[str]]
+    values: List[List[str]]
     plaintext1: str = ''
     plaintext2: str = ''
     ciphertext1: bytes = b''
@@ -97,6 +97,8 @@ class Database:
     key2: bytes = b''
 
     def __init__(self):
+        self.keys = []
+        self.values = []
         self.backup()
 
     def setKey(self, key1: str, key2: str):
@@ -208,4 +210,4 @@ def decode(key: bytes, ciphertext: bytes, nonce: bytes, tag: bytes) -> bytes | N
         return plaintext
     except ValueError:
         print("Key incorrect or message corrupted")
-        return None
+        raise ValueError
