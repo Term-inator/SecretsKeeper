@@ -85,6 +85,9 @@ class Repository:
             res.append(self._getRecordById(identifier))
         return res
 
+    def toDataBase(self) -> Tuple[List[List[str]], List[List[str]]]:
+        pass
+
 
 class Database:
     keys: List[List[str]]

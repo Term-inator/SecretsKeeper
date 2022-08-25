@@ -97,12 +97,16 @@ class CLI:
             if cmd_name in self.command_map:
                 print(self.is_login, self.time_checker.inactive)
                 cmd = self.command_map[cmd_name]
+                # 退出
                 if isinstance(cmd, command.ExitCmd):
                     cmd.execute(params)
                     break
+                # 未登录 或 一段时间无操作
                 if not self.is_login or self.time_checker.inactive:
+                    # 是登录命令
                     if isinstance(cmd, command.LoginCmd):
                         res = cmd.execute(params)
+                        # 登陆成功
                         if res:
                             self.is_login = True
                             self.time_checker.initTimer()
@@ -112,9 +116,11 @@ class CLI:
                     else:
                         print('Please login')
                 else:
+                    # 已登录情景，过滤登录命令
                     if not isinstance(cmd, command.LoginCmd):
                         self.time_checker.clearTimer()
                         cmd.execute(params)
+                        # 登出命令
                         if isinstance(cmd, command.LogoutCmd):
                             self.logout()
             else:
