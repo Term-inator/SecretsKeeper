@@ -4,8 +4,23 @@
 @Author: csc
 @Date : 2022/8/15
 """
+from typing import Dict
+
 import repository
 import utils
+
+
+class Password:
+    length: int
+    strength_level: int  # 小写字母，大写字母，数字，符号 0b1111
+    ban_char: Dict[str]
+
+    def __init__(self, length: int = 10, strength_level: int = 0b1111, ban_char: Dict[str] = None):
+        self.length = length
+        self.strength_level = strength_level
+        self.ban_char = ban_char
+
+
 
 
 class Service:
@@ -30,7 +45,7 @@ class Service:
         except ValueError:
             return False
 
-    def generatePassword(self, length=10, char_type=4):
+    def generatePassword(self, length: int = 10, strength_level: int = 0b1111, ban_char: Dict[str] = None):
         pass
 
     def addPassword(self, identifier, password, note=None):

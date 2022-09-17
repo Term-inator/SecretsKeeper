@@ -36,6 +36,7 @@ def writeConfig():
 
 
 class Repository:
+    # id, [id, url, note, password]
     data: Dict[str, List[str]]
     identifier: int
 
@@ -86,7 +87,16 @@ class Repository:
         return res
 
     def toDataBase(self) -> Tuple[List[List[str]], List[List[str]]]:
-        pass
+        keys = []
+        values = []
+        for _key in self.data:
+            data = self.data[_key]
+            key = [_key, data[1], data[2]]
+            value = [_key, data[3]]
+            keys.append(key)
+            values.append(value)
+
+        return keys, values
 
 
 class Database:
