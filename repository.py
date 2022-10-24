@@ -4,6 +4,7 @@
 @Author: csc
 @Date : 2022/8/15
 """
+from time import sleep
 from typing import Dict, List, Tuple
 
 import yaml
@@ -14,6 +15,7 @@ os.chdir(os.path.split(os.path.realpath(__file__))[0])
 from Cryptodome.Hash import BLAKE2b
 from Cryptodome.Cipher import AES
 from copy import deepcopy
+from threading import Thread
 import utils
 
 config = {}
@@ -120,18 +122,37 @@ class Database:
         self.decode()
 
     def read(self) -> None:
-        with open(config['key_filename'], 'rb') as f:
-            self.ciphertext1 = f.read()
-        with open(config['value_filename'], 'rb') as f:
-            self.ciphertext2 = f.read()
+        def readKeys():
+            with open(config['key_filename'], 'rb') as f:
+                self.ciphertext1 = f.read()
+
+        def readValues():
+            with open(config['value_filename'], 'rb') as f:
+                self.ciphertext2 = f.read()
+
+        t1 = Thread(target=readKeys)
+        t2 = Thread(target=readValues)
+        t1.start()
+        t2.start()
+        t1.join()
+        t2.join()
 
     def write(self) -> None:
-        if self.check():
-            print(self.ciphertext1)
+        def writeKeys():
             with open(config['key_filename'], 'wb') as f:
                 f.write(self.ciphertext1)
+
+        def writeValues():
             with open(config['value_filename'], 'wb') as f:
                 f.write(self.ciphertext2)
+
+        if self.check():
+            t1 = Thread(target=writeKeys)
+            t2 = Thread(target=writeValues())
+            t1.start()
+            t2.start()
+            t1.join()
+            t2.join()
             self.removeBackup()
         else:
             pass
@@ -146,33 +167,53 @@ class Database:
         pass
 
     def encode(self):
-        data1 = list2dToStr(self.keys).encode(encoding='utf-8')
-        data2 = list2dToStr(self.values).encode(encoding='utf-8')
+        def encodeKeys():
+            data1 = list2dToStr(self.keys).encode(encoding='utf-8')
+            self.ciphertext1, nonce1, tag1 = encode(self.key1, data1)
+            config['nonce1'] = nonce1
+            config['tag1'] = tag1
 
-        self.ciphertext1, nonce1, tag1 = encode(self.key1, data1)
-        self.ciphertext2, nonce2, tag2 = encode(self.key2, data2)
+        def encodeValues():
+            data2 = list2dToStr(self.values).encode(encoding='utf-8')
+            self.ciphertext2, nonce2, tag2 = encode(self.key2, data2)
+            config['nonce2'] = nonce2
+            config['tag2'] = tag2
 
-        config['nonce1'] = nonce1
-        config['nonce2'] = nonce2
-        config['tag1'] = tag1
-        config['tag2'] = tag2
+        t1 = Thread(target=encodeKeys)
+        t2 = Thread(target=encodeValues)
+        t1.start()
+        t2.start()
+        t1.join()
+        t2.join()
         writeConfig()
         self.write()
 
     def decode(self):
+        def decodeKeys():
+            plaintext1 = decode(self.key1, self.ciphertext1, config['nonce1'], config['tag1'])
+            self.plaintext1 = plaintext1.decode()
+            print(plaintext1)
+            for key in self.plaintext1.split('\n'):
+                self.keys.append(key.split(','))
+
+        def decodeValues():
+            plaintext2 = decode(self.key2, self.ciphertext2, config['nonce2'], config['tag2'])
+            self.plaintext2 = plaintext2.decode()
+            print(plaintext2)
+            for val in self.plaintext2.split('\n'):
+                self.values.append(val.split(','))
+
         self.read()
         if len(self.ciphertext1) == 0 or len(self.ciphertext2) == 0:
             return
-        plaintext1 = decode(self.key1, self.ciphertext1, config['nonce1'], config['tag1'])
-        plaintext2 = decode(self.key2, self.ciphertext2, config['nonce2'], config['tag2'])
-        self.plaintext1 = plaintext1.decode()
-        self.plaintext2 = plaintext2.decode()
-        print(plaintext1)
-        print(plaintext2)
-        for key in self.plaintext1.split('\n'):
-            self.keys.append(key.split(','))
-        for val in self.plaintext2.split('\n'):
-            self.values.append(val.split(','))
+
+        t1 = Thread(target=decodeKeys)
+        t2 = Thread(target=decodeValues)
+        t1.start()
+        t2.start()
+        t1.join()
+        t2.join()
+
         if len(self.keys) != len(self.values):
             raise ValueError
         print(self.keys)
