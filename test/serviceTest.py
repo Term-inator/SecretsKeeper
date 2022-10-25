@@ -36,3 +36,8 @@ def test_toRepository():
 
 def test_getPasswordById():
     print(repo.query(note='b'))
+
+
+def test_password():
+    password = service.Password()
+    print(password.gen(strength_level=0b0101))
