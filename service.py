@@ -38,7 +38,7 @@ class Password:
                     self.chars[strength_level].append(i)
             strength_level >>= 1
 
-    def gen(self, length: int = 10, strength_level: int = 0b1111, ban_char: Set[str] = None):
+    def gen(self, length: int = 10, strength_level: int = 0b1111, ban_char: List[str] = None):
         """
         生成密码
         :param length: 密码长度
@@ -64,7 +64,11 @@ class Password:
         for i in range(4):
             for j in range(groups[i]):
                 level = 2**i
-                char_lst.append(chr(random.choice(self.chars[level])))
+                while True:
+                    char = chr(random.choice(self.chars[level]))
+                    if char not in ban_char:
+                        break
+                char_lst.append(char)
         random.shuffle(char_lst)
 
         return "".join(char_lst)
