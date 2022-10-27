@@ -40,4 +40,4 @@ def test_getPasswordById():
 
 def test_password():
     password = service.Password()
-    print(password.gen(strength_level=0b0001, ban_char=["a", "b", "c"]))
+    print(password.gen(strength_level=0b0001))

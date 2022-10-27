@@ -66,7 +66,7 @@ class Password:
                 level = 2**i
                 while True:
                     char = chr(random.choice(self.chars[level]))
-                    if char not in ban_char:
+                    if ban_char is None or char not in ban_char:
                         break
                 char_lst.append(char)
         random.shuffle(char_lst)
@@ -75,8 +75,9 @@ class Password:
 
 
 class Service:
-    database = None
-    repo = None
+    database: repository.Database = None
+    repo: repository.Repository = None
+    password_generator: Password = Password()
 
     def _reset(self):
         self.database = None
@@ -97,8 +98,9 @@ class Service:
         except ValueError:
             return False
 
-    def generatePassword(self, length: int = 10, strength_level: int = 0b1111, ban_char: Set[str] = None):
-        pass
+    def generatePassword(self, length: int = 10, strength_level: int = 0b1111, ban_char: List[str] = None):
+        password = self.password_generator.gen(length, strength_level, ban_char)
+        return password
 
     def addPassword(self, identifier, password, note=None):
         pass

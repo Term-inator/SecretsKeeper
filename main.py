@@ -13,7 +13,13 @@ from rich.console import Console
 import command
 from service import service
 
-command_list: List[command.Command] = [command.LoginCmd(), command.LogoutCmd(), command.ExitCmd(), command.LsCmd()]
+command_list: List[command.Command] = [
+    command.LoginCmd(),
+    command.LogoutCmd(),
+    command.ExitCmd(),
+    command.LsCmd(),
+    command.GenCmd()
+]
 
 
 class TimeChecker(threading.Thread):
@@ -67,17 +73,25 @@ class CLI:
             for alias in cmd.alias:
                 self.command_map[alias] = cmd
 
-    def _parseParams(self, params: List[str]) -> Dict[str, str | bool]:
+    def _parseParams(self, params: List[str]) -> Dict[str, str | bool | List[str]]:
         res = {}
         n = len(params)
+        current_param = ''
         for i in range(n):
             if params[i][0] == '-':
-                param_name = params[i][1:]
-                print(param_name)
-                res[param_name] = True
-                if i + 1 < n and params[i + 1][0] != '-':
-                    res[param_name] = params[i + 1]
-                    i += 2
+                current_param = params[i][1:]
+                print(current_param)
+                res[current_param] = True
+            else:
+                if current_param != '':
+                    if type(res[current_param]) is bool:
+                        res[current_param] = params[i]
+                    elif type(res[current_param]) is list:
+                        res[current_param].append(params[i])
+                    else:
+                        res[current_param] = [res[current_param], params[i]]
+                else:
+                    raise RuntimeError("Invalid param style.")
         return res
 
     def logout(self):
@@ -90,7 +104,7 @@ class CLI:
             cmd_str = input()
             tmp = cmd_str.strip().split()
             cmd_name = tmp[0]
-            params = None
+            params = {}
             if len(tmp) > 1:
                 params = self._parseParams(tmp[1:])
             print(cmd_name, params)
