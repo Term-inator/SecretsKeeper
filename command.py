@@ -6,17 +6,27 @@
 """
 from typing import List, Dict, Callable
 
+import utils
 from service import service
 
 
 class Parameter:
     name: str
+    description: str
     convert_func: Callable[[str], any]
+    default_value: any
+    check_func: Callable[[str], bool]
 
-    def __init__(self, name: str, convert_func: Callable[[str], any], default_value):
+    def __init__(self, name: str, description: str, convert_func: Callable[[str], any], default_value,
+                 check_func: Callable[[str], bool] = (lambda x: True)):
         self.name = name
+        self.description = description
         self.convert_func = convert_func
         self.default_value = default_value
+        self.check_func = check_func
+
+    def check(self, value: str | List[str] | Dict[str, str] | None):
+        return self.check_func(value)
 
     def convert(self, value: str | List[str] | Dict[str, str] | None):
         if value is None:
@@ -74,15 +84,27 @@ class LsCmd(Command):
 
 
 class GenCmd(Command):
-    name = 'gen'
-    params = [
-        Parameter('l', int, 10),
-        Parameter('s', lambda x: int(x, 2), 0b1111),
-        Parameter('b', str, None)
-    ]
+    name = 'generate'
+    alias = ['gen']
+
+    def __init__(self):
+        def checkS(x: str) -> bool:
+            if x is None:
+                return True
+            if utils.getOnes(int(x, 2)) > 0:
+                return True
+            else:
+                raise ValueError('-s at least has one 1.')
+
+        self.params = [
+            Parameter('l', 'length', int, 10),
+            Parameter('s', 'strength level', lambda x: int(x, 2), 0b1111, check_func=checkS),
+            Parameter('b', 'ban chars', str, None)
+        ]
 
     def execute(self, params: Dict[str, str | bool | List[str]] = None):
         _params = {}
         for param in self.params:
-            _params[param.name] = param.convert(params.get(param.name))
+            if param.check(params.get(param.name)):
+                _params[param.name] = param.convert(params.get(param.name))
         print(service.generatePassword(_params['l'], _params['s'], _params['b']))

@@ -100,45 +100,48 @@ class CLI:
 
     def run(self) -> None:
         while True:
-            self.console.print('>>> ', style='blue', end='')
-            cmd_str = input()
-            tmp = cmd_str.strip().split()
-            cmd_name = tmp[0]
-            params = {}
-            if len(tmp) > 1:
-                params = self._parseParams(tmp[1:])
-            print(cmd_name, params)
-            if cmd_name in self.command_map:
-                print(self.is_login, self.time_checker.inactive)
-                cmd = self.command_map[cmd_name]
-                # 退出
-                if isinstance(cmd, command.ExitCmd):
-                    cmd.execute(params)
-                    break
-                # 未登录 或 一段时间无操作
-                if not self.is_login or self.time_checker.inactive:
-                    # 是登录命令
-                    if isinstance(cmd, command.LoginCmd):
-                        res = cmd.execute(params)
-                        # 登陆成功
-                        if res:
-                            self.is_login = True
-                            self.time_checker.initTimer()
-                            self.time_checker.startTimer()
-                        else:
-                            self.logout()
-                    else:
-                        print('Please login')
-                else:
-                    # 已登录情景，过滤登录命令
-                    if not isinstance(cmd, command.LoginCmd):
-                        self.time_checker.clearTimer()
+            try:
+                self.console.print('>>> ', style='blue', end='')
+                cmd_str = input()
+                tmp = cmd_str.strip().split()
+                cmd_name = tmp[0]
+                params = {}
+                if len(tmp) > 1:
+                    params = self._parseParams(tmp[1:])
+                print(cmd_name, params)
+                if cmd_name in self.command_map:
+                    print(self.is_login, self.time_checker.inactive)
+                    cmd = self.command_map[cmd_name]
+                    # 退出
+                    if isinstance(cmd, command.ExitCmd):
                         cmd.execute(params)
-                        # 登出命令
-                        if isinstance(cmd, command.LogoutCmd):
-                            self.logout()
-            else:
-                print('Unknown command')
+                        break
+                    # 未登录 或 一段时间无操作
+                    if not self.is_login or self.time_checker.inactive:
+                        # 是登录命令
+                        if isinstance(cmd, command.LoginCmd):
+                            res = cmd.execute(params)
+                            # 登陆成功
+                            if res:
+                                self.is_login = True
+                                self.time_checker.initTimer()
+                                self.time_checker.startTimer()
+                            else:
+                                self.logout()
+                        else:
+                            print('Please login')
+                    else:
+                        # 已登录情景，过滤登录命令
+                        if not isinstance(cmd, command.LoginCmd):
+                            self.time_checker.clearTimer()
+                            cmd.execute(params)
+                            # 登出命令
+                            if isinstance(cmd, command.LogoutCmd):
+                                self.logout()
+                else:
+                    print('Unknown command')
+            except Exception as e:
+                self.console.print(e, style='red')
 
 
 if __name__ == '__main__':
