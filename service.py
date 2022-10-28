@@ -38,6 +38,21 @@ class Password:
                     self.chars[strength_level].append(i)
             strength_level >>= 1
 
+    def checkBanChar(self, ban_char: List[str] = None) -> bool:
+        """
+        如果某一类字符集是 ban_char 的子集，返回 False
+        """
+        if ban_char is None:
+            return True
+        for key in self.chars:
+            cnt = 0
+            for char in self.chars[key]:
+                if chr(char) in ban_char:
+                    cnt += 1
+            if cnt == len(self.chars[key]):
+                return False
+        return True
+
     def gen(self, length: int = 10, strength_level: int = 0b1111, ban_char: List[str] = None):
         """
         生成密码
@@ -46,6 +61,9 @@ class Password:
         :param ban_char: 排除一些字符
         :return:
         """
+        if not self.checkBanChar(ban_char):
+            raise ValueError('Ban too many chars.')
+
         one = utils.getOnes(strength_level)
         groups = [(strength_level >> i) & 1 for i in range(4)]
 
