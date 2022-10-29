@@ -112,6 +112,13 @@ class CLI:
                 if cmd_name in self.command_map:
                     print(self.is_login, self.time_checker.inactive)
                     cmd = self.command_map[cmd_name]
+
+                    # 帮助
+                    if params.get('h') is not None:
+                        print(1111111)
+                        cmd.help()
+                        continue
+
                     # 退出
                     if isinstance(cmd, command.ExitCmd):
                         cmd.execute(params)

@@ -5,6 +5,7 @@
 @Date : 2022/8/20
 """
 from typing import List, Dict, Callable
+import itertools
 
 import utils
 from service import service
@@ -17,7 +18,8 @@ class Parameter:
     default_value: any
     check_func: Callable[[str], bool]
 
-    def __init__(self, name: str, description: str, convert_func: Callable[[str], any], default_value,
+    def __init__(self, name: str, description: str, default_value,
+                 convert_func: Callable[[str], any] = None,
                  check_func: Callable[[str], bool] = (lambda x: True)):
         self.name = name
         self.description = description
@@ -26,11 +28,15 @@ class Parameter:
         self.check_func = check_func
 
     def check(self, value: str | List[str] | Dict[str, str] | None):
+        if self.check_func is None:
+            raise ValueError(f'Check failed. The check_func of param {self.name} is None.')
         return self.check_func(value)
 
     def convert(self, value: str | List[str] | Dict[str, str] | None):
         if value is None:
             return self.default_value
+        if self.convert_func is None:
+            return value
 
         if type(value) == str:
             return self.convert_func(value)
@@ -48,15 +54,35 @@ class Command:
     name: str
     alias: List[str] = []
     params: List[Parameter] = []
+    description: str
 
-    def execute(self, params: Dict[str, str | bool | List[str]] = None):
+    def __init__(self):
+        self.addParams([Parameter('h', 'help', False)])
+
+    def addParams(self, params: List[Parameter]):
+        res = []
+        for param in self.params:
+            res.append(param)
+        for param in params:
+            res.append(param)
+        self.params = res
+
+    def help(self):
+        print(f'{self.name}:')
+        print(self.description)
+        for param in self.params:
+            if param.name != 'h':
+                print(f'-{param.name}: {param.description}')
+
+    def execute(self, params: Dict[str, str | bool | List[str]] = {}):
         pass
 
 
 class LoginCmd(Command):
     name = 'login'
+    description = '登录'
 
-    def execute(self, params: Dict[str, str | bool | List[str]] = None) -> bool:
+    def execute(self, params: Dict[str, str | bool | List[str]] = {}) -> bool:
         key1 = input('key1: ')
         key2 = input('key2: ')
         return service.login(key1, key2)
@@ -64,30 +90,36 @@ class LoginCmd(Command):
 
 class LogoutCmd(Command):
     name = 'logout'
+    description = '登出'
 
-    def execute(self, params: Dict[str, str | bool | List[str]] = None):
+    def execute(self, params: Dict[str, str | bool | List[str]] = {}):
         print('logout...')
 
 
 class ExitCmd(Command):
     name = 'exit'
+    description = '退出程序'
 
-    def execute(self, params: Dict[str, str | bool | List[str]] = None):
+    def execute(self, params: Dict[str, str | bool | List[str]] = {}):
         print('exiting...')
 
 
 class LsCmd(Command):
     name = 'ls'
+    description = '列出所有密码'
 
-    def execute(self, params: Dict[str, str | bool | List[str]] = None):
+    def execute(self, params: Dict[str, str | bool | List[str]] = {}):
         service.ls()
 
 
 class GenCmd(Command):
     name = 'generate'
     alias = ['gen']
+    description = '生成一个密码'
 
     def __init__(self):
+        super().__init__()
+
         def checkS(x: str) -> bool:
             if x is None:
                 return True
@@ -96,13 +128,13 @@ class GenCmd(Command):
             else:
                 raise ValueError('-s at least has one 1.')
 
-        self.params = [
-            Parameter('l', 'length', int, 10),
-            Parameter('s', 'strength level', lambda x: int(x, 2), 0b1111, check_func=checkS),
-            Parameter('b', 'ban chars', str, None)
-        ]
+        self.addParams([
+            Parameter('l', '密码长度', 10, int),
+            Parameter('s', '密码强度', 0b1111, lambda x: int(x, 2), check_func=checkS),
+            Parameter('b', '指定不使用某些字符', None)
+        ])
 
-    def execute(self, params: Dict[str, str | bool | List[str]] = None):
+    def execute(self, params: Dict[str, str | bool | List[str]] = {}):
         _params = {}
         for param in self.params:
             if param.check(params.get(param.name)):

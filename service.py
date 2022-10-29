@@ -102,6 +102,8 @@ class Service:
         self.repo = None
 
     def logout(self):
+        if self.database is None and self.repo is None:
+            return
         self.database.keys, self.database.values = self.repo.toDataBase()
         self.database.encode()
         self._reset()
