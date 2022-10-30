@@ -4,7 +4,6 @@
 @Author: csc
 @Date : 2022/8/15
 """
-from time import sleep
 from typing import Dict, List, Tuple
 
 import yaml
@@ -55,6 +54,9 @@ class Repository:
 
     def _getRecordById(self, identifier: str):
         return self.data[identifier]
+
+    def getAllRecords(self):
+        return self.data
 
     def insertPassword(self, platform: str, username: str, password: str, note: str = ''):
         # TODO check existence

@@ -135,8 +135,9 @@ class Service:
         pass
 
     def ls(self):
-        for identifier in self.repo.data:
-            print('\t'.join(self.repo.data[identifier][:3]))
+        data = self.repo.getAllRecords()
+        for identifier in data:
+            print('\t'.join(data[identifier][:4]))
 
 
 service = Service()

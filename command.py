@@ -106,7 +106,7 @@ class ExitCmd(Command):
 
 class LsCmd(Command):
     name = 'ls'
-    description = '列出所有密码'
+    description = '列出 key 文件的内容'
 
     def execute(self, params: Dict[str, str | bool | List[str]] = {}):
         service.ls()
