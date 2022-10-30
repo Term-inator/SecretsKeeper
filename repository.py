@@ -38,8 +38,15 @@ def writeConfig():
 
 
 class Repository:
-    # id, [id, url, note, password]
+    # id, [id, platform, username, note, password]
     data: Dict[str, List[str]]
+    indexMap: Dict[str, int] = {
+        'id': 0,
+        'platform': 1,
+        'username': 2,
+        'note': 3,
+        'password': 4
+    }
     identifier: int
 
     def __init__(self, database):
@@ -49,34 +56,45 @@ class Repository:
     def _getRecordById(self, identifier: str):
         return self.data[identifier]
 
-    def insertPassword(self, url: str, password: str, note: str = ''):
+    def insertPassword(self, platform: str, username: str, password: str, note: str = ''):
         # TODO check existence
-        self.data[str(self.identifier)] = [str(self.identifier), url, note, password]
+        self.data[str(self.identifier)] = [str(self.identifier), platform, username, note, password]
         self.identifier += 1
 
     def _getPasswordById(self, identifier: str) -> str:
-        return self.data[identifier][-1]
+        return self.data[identifier][self.indexMap['password']]
 
-    def _getIdByUrl(self, url: str) -> List[str]:
+    def _getIdByPlatform(self, platform: str) -> List[str]:
         res = []
         for identifier in self.data:
-            if self.data[identifier][1].find(url) != -1:
+            if self.data[identifier][self.indexMap['platform']].find(platform) != -1:
+                res.append(identifier)
+        return res
+
+    def _getIdByUsername(self, username: str) -> List[str]:
+        res = []
+        for identifier in self.data:
+            if self.data[identifier][self.indexMap['username']].find(username) != -1:
                 res.append(identifier)
         return res
 
     def _getIdByNote(self, note: str) -> List[str]:
         res = []
         for identifier in self.data:
-            if self.data[identifier][2].find(note) != -1:
+            if self.data[identifier][self.indexMap['note']].find(note) != -1:
                 res.append(identifier)
         return res
 
-    def query(self, identifier: str = None, url: str = None, note: str = None):
+    def query(self, identifier: str = None, platform: str = None, username: str = None, note: str = None):
         ids = set()
         if identifier:
             ids.add(identifier)
-        if url:
-            _ids = self._getIdByUrl(url)
+        if platform:
+            _ids = self._getIdByPlatform(platform)
+            for i in _ids:
+                ids.add(i)
+        if username:
+            _ids = self._getIdByUsername(username)
             for i in _ids:
                 ids.add(i)
         if note:
@@ -93,8 +111,8 @@ class Repository:
         values = []
         for _key in self.data:
             data = self.data[_key]
-            key = [_key, data[1], data[2]]
-            value = [_key, data[3]]
+            key = [_key, data[self.indexMap['platform']], data[self.indexMap['username']], data[self.indexMap['note']]]
+            value = [_key, data[self.indexMap['password']]]
             keys.append(key)
             values.append(value)
 
@@ -260,8 +278,7 @@ def decode(key: bytes, ciphertext: bytes, nonce: bytes, tag: bytes) -> bytes | N
     plaintext = cipher.decrypt(ciphertext)
     try:
         cipher.verify(tag)
-        print("The message is authentic")
+        print('The message is authentic.')
         return plaintext
     except ValueError:
-        print("Key incorrect or message corrupted")
-        raise ValueError
+        raise ValueError('Key incorrect or message corrupted.')

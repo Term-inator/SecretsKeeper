@@ -23,10 +23,9 @@ repo = repository.Repository(database)
 
 def test_encode_decode():
     database.decode()
-    # repo.getKeys().append(['123', 'adc', 'asd'])
-    # repo.getKeys().append(['2', 'abc', 'fgh'])
-    # repo.getValues().append(['2', 'jkl'])
-    # repo.getValues().append(['123', 'efg'])
+    repo.data['1'] = ['1', 'plt1', 'usr1', 'note1', 'psd1']
+    repo.data['2'] = ['2', 'plt2', 'usr2', 'note2', 'psd2']
+    database.keys, database.values = repo.toDataBase()
     database.encode()
 
 
