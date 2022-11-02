@@ -66,24 +66,12 @@ class Repository:
     def _getPasswordById(self, identifier: str) -> str:
         return self.data[identifier][self.indexMap['password']]
 
-    def _getIdByPlatform(self, platform: str) -> List[str]:
+    def _getIdBy(self, key: str, value: str):
+        if key not in self.indexMap:
+            raise KeyError(f'{key} is not in indexMap.')
         res = []
         for identifier in self.data:
-            if self.data[identifier][self.indexMap['platform']].find(platform) != -1:
-                res.append(identifier)
-        return res
-
-    def _getIdByUsername(self, username: str) -> List[str]:
-        res = []
-        for identifier in self.data:
-            if self.data[identifier][self.indexMap['username']].find(username) != -1:
-                res.append(identifier)
-        return res
-
-    def _getIdByNote(self, note: str) -> List[str]:
-        res = []
-        for identifier in self.data:
-            if self.data[identifier][self.indexMap['note']].find(note) != -1:
+            if self.data[identifier][self.indexMap[key]].find(value) != -1:
                 res.append(identifier)
         return res
 
@@ -92,15 +80,15 @@ class Repository:
         if identifier:
             ids.add(identifier)
         if platform:
-            _ids = self._getIdByPlatform(platform)
+            _ids = self._getIdBy('platform', platform)
             for i in _ids:
                 ids.add(i)
         if username:
-            _ids = self._getIdByUsername(username)
+            _ids = self._getIdBy('username', username)
             for i in _ids:
                 ids.add(i)
         if note:
-            _ids = self._getIdByNote(note)
+            _ids = self._getIdBy('note', note)
             for i in _ids:
                 ids.add(i)
         res = []
