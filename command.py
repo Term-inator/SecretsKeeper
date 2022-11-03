@@ -5,7 +5,6 @@
 @Date : 2022/8/20
 """
 from typing import List, Dict, Callable
-import itertools
 
 import utils
 from service import service
@@ -74,7 +73,7 @@ class Command:
             if param.name != 'h':
                 print(f'-{param.name}: {param.description}')
 
-    def execute(self, params: Dict[str, str | bool | List[str]] = {}):
+    def execute(self, params: Dict[str, str | bool | List[str]]):
         pass
 
 
@@ -82,7 +81,7 @@ class LoginCmd(Command):
     name = 'login'
     description = '登录'
 
-    def execute(self, params: Dict[str, str | bool | List[str]] = {}) -> bool:
+    def execute(self, params: Dict[str, str | bool | List[str]]) -> bool:
         key1 = input('key1: ')
         key2 = input('key2: ')
         return service.login(key1, key2)
@@ -92,7 +91,7 @@ class LogoutCmd(Command):
     name = 'logout'
     description = '登出'
 
-    def execute(self, params: Dict[str, str | bool | List[str]] = {}):
+    def execute(self, params: Dict[str, str | bool | List[str]]):
         print('logout...')
 
 
@@ -100,7 +99,7 @@ class ExitCmd(Command):
     name = 'exit'
     description = '退出程序'
 
-    def execute(self, params: Dict[str, str | bool | List[str]] = {}):
+    def execute(self, params: Dict[str, str | bool | List[str]]):
         print('exiting...')
 
 
@@ -108,7 +107,7 @@ class LsCmd(Command):
     name = 'ls'
     description = '列出 key 文件的内容'
 
-    def execute(self, params: Dict[str, str | bool | List[str]] = {}):
+    def execute(self, params: Dict[str, str | bool | List[str]]):
         service.ls()
 
 
@@ -134,9 +133,36 @@ class GenCmd(Command):
             Parameter('b', '指定不使用某些字符', None)
         ])
 
-    def execute(self, params: Dict[str, str | bool | List[str]] = {}):
+    def execute(self, params: Dict[str, str | bool | List[str]]):
         _params = {}
         for param in self.params:
             if param.check(params.get(param.name)):
                 _params[param.name] = param.convert(params.get(param.name))
         print(service.generatePassword(_params['l'], _params['s'], _params['b']))
+
+
+class AddCmd(Command):
+    name = 'add'
+    description = '新建一个 (平台名, 用户名, 备注) -> 密码 的映射'
+
+    def __init__(self):
+        super().__init__()
+
+    def execute(self, params: Dict[str, str | bool | List[str]]):
+        platform = input('platform: ')
+        username = input('username: ')
+        note = input('note: ')
+        length = int(input('length: '))
+        strength_level = int(input('strength_level: '), 2)
+        ban_char = input('ban_char: ').split()
+        print(ban_char)
+        if len(ban_char) == 0:
+            ban_char = None
+        while True:
+            password = service.generatePassword(length, strength_level, ban_char)
+            print(password)
+            next = input('next password?[y/N]: ')
+            if next != 'y':
+                break
+
+        print(platform, username, note, password)
