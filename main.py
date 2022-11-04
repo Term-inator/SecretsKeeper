@@ -18,7 +18,8 @@ command_list: List[command.Command] = [
     command.LogoutCmd(),
     command.ExitCmd(),
     command.LsCmd(),
-    command.GenCmd()
+    command.GenCmd(),
+    command.AddCmd()
 ]
 
 
@@ -115,7 +116,6 @@ class CLI:
 
                     # 帮助
                     if params.get('h') is not None:
-                        print(1111111)
                         cmd.help()
                         continue
 

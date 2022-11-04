@@ -5,33 +5,42 @@
 @Date : 2022/8/20
 """
 from typing import List, Dict, Callable
+from enum import Enum
 
 import utils
 from service import service
 
 
+class Source(Enum):
+    CLI = 0
+    INPUT = 1
+
+
 class Parameter:
     name: str
     description: str
+    source: Source
     convert_func: Callable[[str], any]
     default_value: any
     check_func: Callable[[str], bool]
 
-    def __init__(self, name: str, description: str, default_value,
+    def __init__(self, name: str, description: str, source: Source,
+                 default_value: any = None,
                  convert_func: Callable[[str], any] = None,
                  check_func: Callable[[str], bool] = (lambda x: True)):
         self.name = name
         self.description = description
+        self.source = source
         self.convert_func = convert_func
         self.default_value = default_value
         self.check_func = check_func
 
-    def check(self, value: str | List[str] | Dict[str, str] | None):
+    def check(self, value: str | List[str] | Dict[str, str] | None) -> bool:
         if self.check_func is None:
             raise ValueError(f'Check failed. The check_func of param {self.name} is None.')
         return self.check_func(value)
 
-    def convert(self, value: str | List[str] | Dict[str, str] | None):
+    def convert(self, value: str | List[str] | Dict[str, str] | None) -> any:
         if value is None:
             return self.default_value
         if self.convert_func is None:
@@ -56,9 +65,9 @@ class Command:
     description: str
 
     def __init__(self):
-        self.addParams([Parameter('h', 'help', False)])
+        self.addParams([Parameter('h', 'help', Source.CLI, False)])
 
-    def addParams(self, params: List[Parameter]):
+    def addParams(self, params: List[Parameter]) -> None:
         res = []
         for param in self.params:
             res.append(param)
@@ -66,12 +75,24 @@ class Command:
             res.append(param)
         self.params = res
 
-    def help(self):
+    def parseParams(self, params: Dict[str, str | bool | List[str]]) -> Dict[str, str | bool | List[str]]:
+        _params = {}
+        for param in self.params:
+            if param.source is Source.CLI:
+                value = params.get(param.name)
+            else:
+                value = input(f'{param.name}: ')
+            if param.check(value):
+                _params[param.name] = param.convert(value)
+
+        return _params
+
+    def help(self) -> None:
         print(f'{self.name}:')
         print(self.description)
         for param in self.params:
             if param.name != 'h':
-                print(f'-{param.name}: {param.description}')
+                print(f'{"-" if param.source is Source.CLI else " "}{param.name}: {param.description}')
 
     def execute(self, params: Dict[str, str | bool | List[str]]):
         pass
@@ -79,16 +100,25 @@ class Command:
 
 class LoginCmd(Command):
     name = 'login'
+    alias = []
     description = '登录'
 
+    def __init__(self):
+        super().__init__()
+
+        self.addParams([
+            Parameter('key1', 'key 的密码', Source.INPUT),
+            Parameter('key2', 'value 的密码', Source.INPUT)
+        ])
+
     def execute(self, params: Dict[str, str | bool | List[str]]) -> bool:
-        key1 = input('key1: ')
-        key2 = input('key2: ')
-        return service.login(key1, key2)
+        _params = self.parseParams(params)
+        return service.login(_params['key1'], _params['key2'])
 
 
 class LogoutCmd(Command):
     name = 'logout'
+    alias = []
     description = '登出'
 
     def execute(self, params: Dict[str, str | bool | List[str]]):
@@ -105,6 +135,7 @@ class ExitCmd(Command):
 
 class LsCmd(Command):
     name = 'ls'
+    alias = []
     description = '列出 key 文件的内容'
 
     def execute(self, params: Dict[str, str | bool | List[str]]):
@@ -128,41 +159,36 @@ class GenCmd(Command):
                 raise ValueError('-s at least has one 1.')
 
         self.addParams([
-            Parameter('l', '密码长度', 10, int),
-            Parameter('s', '密码强度', 0b1111, lambda x: int(x, 2), check_func=checkS),
-            Parameter('b', '指定不使用某些字符', None)
+            Parameter('l', '密码长度',  Source.CLI, 10, int),
+            Parameter('s', '密码强度', Source.CLI, 0b1111, lambda x: int(x, 2), check_func=checkS),
+            Parameter('b', '指定不使用某些字符', Source.CLI, None)
         ])
 
     def execute(self, params: Dict[str, str | bool | List[str]]):
-        _params = {}
-        for param in self.params:
-            if param.check(params.get(param.name)):
-                _params[param.name] = param.convert(params.get(param.name))
+        _params = self.parseParams(params)
         print(service.generatePassword(_params['l'], _params['s'], _params['b']))
 
 
-class AddCmd(Command):
+class AddCmd(GenCmd):
     name = 'add'
+    alias = []
     description = '新建一个 (平台名, 用户名, 备注) -> 密码 的映射'
 
     def __init__(self):
         super().__init__()
 
+        self.addParams([
+            Parameter('platform', '平台名', Source.INPUT),
+            Parameter('username', '用户名', Source.INPUT),
+            Parameter('note', '备注', Source.INPUT, default_value='')
+        ])
+
     def execute(self, params: Dict[str, str | bool | List[str]]):
-        platform = input('platform: ')
-        username = input('username: ')
-        note = input('note: ')
-        length = int(input('length: '))
-        strength_level = int(input('strength_level: '), 2)
-        ban_char = input('ban_char: ').split()
-        print(ban_char)
-        if len(ban_char) == 0:
-            ban_char = None
+        _params = self.parseParams(params)
         while True:
-            password = service.generatePassword(length, strength_level, ban_char)
+            password = service.generatePassword(_params['l'], _params['s'], _params['b'])
             print(password)
             next = input('next password?[y/N]: ')
             if next != 'y':
                 break
-
-        print(platform, username, note, password)
+        print(_params['platform'], _params['username'], _params['note'], password)
