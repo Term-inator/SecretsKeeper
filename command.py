@@ -191,4 +191,4 @@ class AddCmd(GenCmd):
             next = input('next password?[y/N]: ')
             if next != 'y':
                 break
-        print(_params['platform'], _params['username'], _params['note'], password)
+        service.addPassword(_params['platform'], _params['username'], password, _params['note'])

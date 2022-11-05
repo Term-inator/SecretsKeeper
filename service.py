@@ -122,8 +122,9 @@ class Service:
         password = self.password_generator.gen(length, strength_level, ban_char)
         return password
 
-    def addPassword(self, identifier, password, note=None):
-        pass
+    def addPassword(self, platform: str, username: str, password: str, note=None):
+        self.repo.insertPassword(platform, username, password, note)
+        print(f'platform: {platform}, username: {username}, password: {password}, note: {note}')
 
     def removePassword(self, identifier):
         pass

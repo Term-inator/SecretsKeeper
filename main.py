@@ -11,6 +11,7 @@ from typing import List, Dict
 from rich.console import Console
 
 import command
+from exception import RecoverException
 from service import service
 
 command_list: List[command.Command] = [
@@ -147,8 +148,10 @@ class CLI:
                                 self.logout()
                 else:
                     print('Unknown command')
+            except RecoverException as e:
+                self.console.print(f'RECOVER: {e}', style='red')
             except Exception as e:
-                self.console.print(e, style='red')
+                self.console.print(f'ERROR: {e}', style='red')
 
 
 if __name__ == '__main__':

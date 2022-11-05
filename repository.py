@@ -9,6 +9,8 @@ from typing import Dict, List, Tuple
 import yaml
 import os
 
+from exception import RecoverException
+
 os.chdir(os.path.split(os.path.realpath(__file__))[0])
 
 from Cryptodome.Hash import BLAKE2b
@@ -59,7 +61,10 @@ class Repository:
         return self.data
 
     def insertPassword(self, platform: str, username: str, password: str, note: str = ''):
-        # TODO check existence
+        # 检查冲突
+        if self.data.get(str(self.identifier)) is not None:
+            self.fixIdentifier()
+
         self.data[str(self.identifier)] = [str(self.identifier), platform, username, note, password]
         self.identifier += 1
 
@@ -95,6 +100,20 @@ class Repository:
         for identifier in ids:
             res.append(self._getRecordById(identifier))
         return res
+
+    def fixIdentifier(self) -> None:
+        """
+        修复潜在的 identifier 冲突问题
+        :return:
+        """
+        pre_identifier = self.identifier
+
+        res = 0
+        for identifier in self.data:
+            res = max(res, identifier)
+        self.identifier = res + 1
+
+        raise RecoverException(f'Duplicate identifier {pre_identifier}. Change to {self.identifier}')
 
     def toDataBase(self) -> Tuple[List[List[str]], List[List[str]]]:
         keys = []
