@@ -24,38 +24,54 @@ class Parameter:
     default_value: any
     check_func: Callable[[str], bool]
 
-    def __init__(self, name: str, description: str, source: Source,
+    def __init__(self, name: str, description: str, _type, source: Source,
                  default_value: any = None,
                  convert_func: Callable[[str], any] = None,
                  check_func: Callable[[str], bool] = (lambda x: True)):
         self.name = name
         self.description = description
+        self.type = _type
         self.source = source
         self.convert_func = convert_func
         self.default_value = default_value
         self.check_func = check_func
 
-    def check(self, value: str | List[str] | Dict[str, str] | None) -> bool:
-        if self.check_func is None:
-            raise ValueError(f'Check failed. The check_func of param {self.name} is None.')
-        return self.check_func(value)
+    def _getName(self):
+        return f'{"-" if self.source is Source.CLI else " "}{self.name}'
 
-    def convert(self, value: str | List[str] | Dict[str, str] | None) -> any:
+    def checkType(self, value: str | List[str] | None):
+        if value is None:
+            return True
+        # 是 list 但 value 是 str 的话会转换成 list(str)
+        if self.type is list:
+            return True
+        if type(value) is str:
+            return True
+        else:
+            raise TypeError(f'{self._getName()} requires a {self.type.__name__}, not a {type(value).__name__}')
+
+    def check(self, value: str | List[str] | None) -> bool:
+        return self.checkType(value) and self.check_func(value)
+
+    def convert(self, value: str | List[str] | None) -> any:
         if value is None:
             return self.default_value
         if self.convert_func is None:
             return value
 
         if type(value) == str:
-            return self.convert_func(value)
-        elif type(value) == list:
+            if self.type is list:
+                value = [value]
+            else:
+                return self.convert_func(value)
+        if type(value) == list:
             for i in range(len(value)):
                 value[i] = self.convert_func(value[i])
             return value
-        elif type(value) == dict:
-            for key in value:
-                value[key] = self.convert_func(value[key])
-            return value
+
+    def help(self) -> None:
+        if self.name != 'h':
+            print(f'{self._getName()}: {self.type.__name__}\t|\t{self.description}')
 
 
 class Command:
@@ -65,7 +81,7 @@ class Command:
     description: str
 
     def __init__(self):
-        self.addParams([Parameter('h', 'help', Source.CLI, False)])
+        self.addParams([Parameter('h', 'help', bool, Source.CLI, False)])
 
     def addParams(self, params: List[Parameter]) -> None:
         res = []
@@ -91,8 +107,7 @@ class Command:
         print(f'{self.name}:')
         print(self.description)
         for param in self.params:
-            if param.name != 'h':
-                print(f'{"-" if param.source is Source.CLI else " "}{param.name}: {param.description}')
+            param.help()
 
     def execute(self, params: Dict[str, str | bool | List[str]]):
         pass
@@ -107,8 +122,8 @@ class LoginCmd(Command):
         super().__init__()
 
         self.addParams([
-            Parameter('key1', 'key 的密码', Source.INPUT),
-            Parameter('key2', 'value 的密码', Source.INPUT)
+            Parameter('key1', 'key 的密码', str, Source.INPUT),
+            Parameter('key2', 'value 的密码', str, Source.INPUT)
         ])
 
     def execute(self, params: Dict[str, str | bool | List[str]]) -> bool:
@@ -159,9 +174,9 @@ class GenCmd(Command):
                 raise ValueError('-s at least has one 1.')
 
         self.addParams([
-            Parameter('l', '密码长度',  Source.CLI, 10, int),
-            Parameter('s', '密码强度', Source.CLI, 0b1111, lambda x: int(x, 2), check_func=checkS),
-            Parameter('b', '指定不使用某些字符', Source.CLI, None)
+            Parameter('l', '密码长度', int, Source.CLI, 10, int),
+            Parameter('s', '密码强度', int, Source.CLI, 0b1111, lambda x: int(x, 2), check_func=checkS),
+            Parameter('b', '指定不使用某些字符', list, Source.CLI, None)
         ])
 
     def execute(self, params: Dict[str, str | bool | List[str]]):
@@ -178,9 +193,9 @@ class AddCmd(GenCmd):
         super().__init__()
 
         self.addParams([
-            Parameter('platform', '平台名', Source.INPUT),
-            Parameter('username', '用户名', Source.INPUT),
-            Parameter('note', '备注', Source.INPUT, default_value='')
+            Parameter('platform', '平台名', str, Source.INPUT),
+            Parameter('username', '用户名', str, Source.INPUT),
+            Parameter('note', '备注', str, Source.INPUT, default_value='')
         ])
 
     def execute(self, params: Dict[str, str | bool | List[str]]):

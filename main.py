@@ -6,6 +6,7 @@
 """
 import threading
 import ctypes
+import traceback
 from time import sleep
 from typing import List, Dict
 from rich.console import Console
@@ -148,10 +149,8 @@ class CLI:
                                 self.logout()
                 else:
                     print('Unknown command')
-            except RecoverException as e:
-                self.console.print(f'RECOVER: {e}', style='red')
             except Exception as e:
-                self.console.print(f'ERROR: {e}', style='red')
+                self.console.print(traceback.format_exc(), style='red')
 
 
 if __name__ == '__main__':
