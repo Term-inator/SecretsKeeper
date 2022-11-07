@@ -6,6 +6,7 @@
 """
 from typing import List, Dict, Callable
 from enum import Enum
+import pyperclip
 
 import utils
 from service import service
@@ -203,7 +204,45 @@ class AddCmd(GenCmd):
         while True:
             password = service.generatePassword(_params['l'], _params['s'], _params['b'])
             print(password)
-            next = input('next password?[y/N]: ')
+            next = input('换一个?[y/N]: ')
             if next != 'y':
                 break
         service.addPassword(_params['platform'], _params['username'], password, _params['note'])
+
+
+class SearchCmd(Command):
+    name = 'search'
+    alias = []
+    description = '搜索'
+
+    def __init__(self):
+        super().__init__()
+
+        self.addParams([
+            Parameter('p', '平台名', str, Source.CLI, default_value=None),
+            Parameter('u', '用户名', str, Source.CLI, default_value=None),
+            Parameter('n', '备注', str, Source.CLI, default_value=None)
+        ])
+
+    def execute(self, params: Dict[str, str | bool | List[str]]):
+        _params = self.parseParams(params)
+        records = service.searchRecord(platform=_params['p'], username=_params['u'], note=_params['n'])
+        for record in records:
+            print('\t'.join(record))
+        identifier = input('选择一个 id: ')
+
+        in_records = False
+        for record in records:
+            if record[utils.indexMap['id']] == identifier:
+                in_records = True
+                break
+
+        if in_records:
+            record = service.getPassword(identifier)[0]
+            copy_to_clipboard = input('复制到剪贴板?[Y/n]: ')
+            if copy_to_clipboard != 'n':
+                print(record)
+                pyperclip.copy(record[utils.indexMap['password']])
+                print('\t'.join(record[:utils.indexMap['password']]))
+            else:
+                print('\t'.join(record))

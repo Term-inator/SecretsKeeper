@@ -21,7 +21,8 @@ command_list: List[command.Command] = [
     command.ExitCmd(),
     command.LsCmd(),
     command.GenCmd(),
-    command.AddCmd()
+    command.AddCmd(),
+    command.SearchCmd()
 ]
 
 

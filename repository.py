@@ -8,6 +8,7 @@ from typing import Dict, List, Tuple
 
 import yaml
 import os
+from copy import deepcopy
 
 from exception import RecoverException
 
@@ -41,13 +42,6 @@ def writeConfig():
 class Repository:
     # id, [id, platform, username, note, password]
     data: Dict[str, List[str]]
-    indexMap: Dict[str, int] = {
-        'id': 0,
-        'platform': 1,
-        'username': 2,
-        'note': 3,
-        'password': 4
-    }
     identifier: int
 
     def __init__(self, database):
@@ -69,14 +63,14 @@ class Repository:
         self.identifier += 1
 
     def _getPasswordById(self, identifier: str) -> str:
-        return self.data[identifier][self.indexMap['password']]
+        return self.data[identifier][utils.indexMap['password']]
 
     def _getIdBy(self, key: str, value: str):
-        if key not in self.indexMap:
+        if key not in utils.indexMap:
             raise KeyError(f'{key} is not in indexMap.')
         res = []
         for identifier in self.data:
-            if self.data[identifier][self.indexMap[key]].find(value) != -1:
+            if self.data[identifier][utils.indexMap[key]].find(value) != -1:
                 res.append(identifier)
         return res
 
@@ -99,7 +93,9 @@ class Repository:
         res = []
         for identifier in ids:
             res.append(self._getRecordById(identifier))
-        return res
+        print(res)
+        res.sort(key=lambda x: int(x[utils.indexMap['id']]))
+        return deepcopy(res)
 
     def fixIdentifier(self) -> None:
         """
@@ -120,8 +116,8 @@ class Repository:
         values = []
         for _key in self.data:
             data = self.data[_key]
-            key = [_key, data[self.indexMap['platform']], data[self.indexMap['username']], data[self.indexMap['note']]]
-            value = [_key, data[self.indexMap['password']]]
+            key = [_key, data[utils.indexMap['platform']], data[utils.indexMap['username']], data[utils.indexMap['note']]]
+            value = [_key, data[utils.indexMap['password']]]
             keys.append(key)
             values.append(value)
 

@@ -129,11 +129,21 @@ class Service:
     def removePassword(self, identifier):
         pass
 
-    def searchPassword(self, identifier: str = None, url: str = None, note: str = None):
-        return self.repo.query(identifier=identifier)
+    def searchRecord(self, platform: str = None, username: str = None, note: str = None):
+        """
+        查找记录，不包含密码
+        :param platform: 平台名
+        :param username: 用户名
+        :param note: 备注
+        :return: 记录
+        """
+        records = self.repo.query(platform=platform, username=username, note=note)
+        for i in range(len(records)):
+            records[i].pop(utils.indexMap['password'])
+        return records
 
-    def recallId(self, note):
-        pass
+    def getPassword(self, identifier: str):
+        return self.repo.query(identifier=identifier)
 
     def ls(self):
         data = self.repo.getAllRecords()

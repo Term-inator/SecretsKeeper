@@ -4,6 +4,15 @@
 @Author: csc
 @Date : 2022/8/15
 """
+from typing import Dict
+
+indexMap: Dict[str, int] = {
+    'id': 0,
+    'platform': 1,
+    'username': 2,
+    'note': 3,
+    'password': 4
+}
 
 
 def hashUpdateDigest(hash_obj, string: str) -> str:
