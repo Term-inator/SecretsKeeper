@@ -32,3 +32,24 @@ def getOnes(bits: int):
         res += (bits & 1)
         bits >>= 1
     return res
+
+
+class Choice:
+    question: str
+    _default: bool
+
+    def __init__(self, question: str, _default: bool = True):
+        self.question = question
+        self._default = _default
+
+    def ask(self):
+        left = 'Y' if self._default else 'y'
+        right = 'n' if self._default else 'N'
+        while True:
+            choice = input(f'{self.question}[{left}/{right}]: ')
+            if choice == '':
+                return self._default
+            elif choice == 'y' or choice == 'Y':
+                return True
+            elif choice == 'n' or choice == 'N':
+                return False

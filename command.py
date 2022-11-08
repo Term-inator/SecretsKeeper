@@ -204,8 +204,8 @@ class AddCmd(GenCmd):
         while True:
             password = service.generatePassword(_params['l'], _params['s'], _params['b'])
             print(password)
-            next = input('换一个?[y/N]: ')
-            if next != 'y':
+            next_psd = utils.Choice('换一个?', False).ask()
+            if not next_psd:
                 break
         service.addPassword(_params['platform'], _params['username'], password, _params['note'])
 
@@ -239,8 +239,9 @@ class SearchCmd(Command):
 
         if in_records:
             record = service.getPassword(identifier)[0]
-            copy_to_clipboard = input('复制到剪贴板?[Y/n]: ')
-            if copy_to_clipboard != 'n':
+
+            copy_to_clipboard = utils.Choice('复制到剪贴板?', True).ask()
+            if copy_to_clipboard:
                 print(record)
                 pyperclip.copy(record[utils.indexMap['password']])
                 print('\t'.join(record[:utils.indexMap['password']]))
