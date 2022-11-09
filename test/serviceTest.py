@@ -11,7 +11,7 @@ import service
 import repository
 from Cryptodome.Hash import SHA3_224, BLAKE2b
 import utils
-
+from models import *
 
 database = repository.Database()
 key1 = '123456ab'
@@ -40,3 +40,12 @@ def test_getPasswordById():
 def test_password():
     password = service.Password()
     print(password.gen(strength_level=0b0001))
+
+
+def test_sqlite():
+    import datetime
+    print(datetime.datetime.now())
+    secret = Secret.create(platform='1', username='2', password='3', create_time=datetime.datetime.now(), update_time=datetime.datetime.now())
+    # for secret in Secret.select().where(Secret.platform == '1'):
+    #     secret.delete_instance()
+    encrypt = Encrypt.create(secret_id=secret, key='123456ab', nounce='4', tag='3')
