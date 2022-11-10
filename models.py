@@ -15,22 +15,27 @@ class BaseModel(Model):
         database = db
 
 
+# 用于登录
+class User(BaseModel):
+    pass
+
+
 class Secret(BaseModel):
     id = AutoField()
-    platform = TextField()
-    username = TextField()
-    note = TextField(null=True)
-    password = TextField()
+    platform = BlobField()
+    username = BlobField()
+    note = BlobField(null=True)
+    password = BlobField()
     create_time = DateTimeField()
     update_time = DateTimeField()
 
 
 class Encrypt(BaseModel):
     id = AutoField()
-    secret_id = ForeignKeyField(Secret, backref='encrypt')
-    key = TextField()
-    nounce = TextField()
-    tag = TextField()
+    secret_id = IntegerField()
+    key = BlobField()
+    nonce = BlobField()
+    tag = BlobField()
 
 
 if __name__ == '__main__':

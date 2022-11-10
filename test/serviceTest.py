@@ -8,33 +8,11 @@ import pytest
 from Cryptodome.Cipher import AES
 
 import service
-import repository
 from Cryptodome.Hash import SHA3_224, BLAKE2b
+from Cryptodome.Random import get_random_bytes
+
 import utils
 from models import *
-
-database = repository.Database()
-key1 = '123456ab'
-key2 = 'ab123456'
-database.setKey(key1, key2)
-database.decode()
-repo = repository.Repository(database)
-
-
-def test_encode_decode():
-    database.decode()
-    repo.data['1'] = ['1', 'plt1', 'usr1', 'note1', 'psd1']
-    repo.data['2'] = ['2', 'plt2', 'usr2', 'note2', 'psd2']
-    database.keys, database.values = repo.toDataBase()
-    database.encode()
-
-
-def test_toRepository():
-    print(database.toRepository())
-
-
-def test_getPasswordById():
-    print(repo.query(note='b'))
 
 
 def test_password():
@@ -49,3 +27,20 @@ def test_sqlite():
     # for secret in Secret.select().where(Secret.platform == '1'):
     #     secret.delete_instance()
     encrypt = Encrypt.create(secret_id=secret, key='123456ab', nounce='4', tag='3')
+
+
+def test_encrypt_decrypt():
+    key = get_random_bytes(32)
+    # key = utils.hashUpdateDigest(BLAKE2b.new(digest_bytes=16), '123').encode()
+    # print(len(key), len(key1))
+    cipher = AES.new(key, AES.MODE_EAX, nonce=get_random_bytes(32))
+    # cipher.update(b'header')
+    data = ''
+    ciphertext, tag = cipher.encrypt_and_digest(data.encode())
+    print(ciphertext)
+    print(eval(str(tag)))
+
+    cipher = AES.new(key, AES.MODE_EAX, nonce=cipher.nonce)
+    # cipher.update(jv['header'])
+    plaintext = cipher.decrypt_and_verify(ciphertext, tag)
+    print("The message was: " + str(plaintext))

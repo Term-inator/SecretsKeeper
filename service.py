@@ -5,9 +5,13 @@
 @Date : 2022/8/15
 """
 import random
+from functools import reduce
 from typing import Dict, Set, List
+from Cryptodome.Hash import BLAKE2b
+from Cryptodome.Random import get_random_bytes
+import datetime
 
-import repository
+from models import Secret, Encrypt
 import utils
 
 
@@ -93,37 +97,40 @@ class Password:
 
 
 class Service:
-    database: repository.Database = None
-    repo: repository.Repository = None
+    key: bytes = b''
     password_generator: Password = Password()
 
-    def _reset(self):
-        self.database = None
-        self.repo = None
-
     def logout(self):
-        if self.database is None and self.repo is None:
-            return
-        self.database.keys, self.database.values = self.repo.toDataBase()
-        self.database.encode()
-        self._reset()
+        self.key = b''
 
-    def login(self, key1, key2):
+    def login(self, key: str):
         print('login')
-        try:
-            self.database = repository.Database()
-            self.database.setKey(key1, key2)
-            self.repo = repository.Repository(self.database)
-            return True
-        except ValueError:
-            return False
+        self.key = utils.hashUpdateDigest(BLAKE2b.new(digest_bits=128), key).encode()
+        return True
 
     def generatePassword(self, length: int = 10, strength_level: int = 0b1111, ban_char: List[str] = None):
         password = self.password_generator.gen(length, strength_level, ban_char)
         return password
 
-    def addPassword(self, platform: str, username: str, password: str, note=None):
-        self.repo.insertPassword(platform, username, password, note)
+    def addPassword(self, platform: str, username: str, password: str, note=''):
+        key = get_random_bytes(32)
+
+        secret_data = [platform, username, password, note]
+        n = len(secret_data)
+        nonces = [get_random_bytes(32) for i in range(n)]
+        tags = [b'' for i in range(n)]
+        for i in range(n):
+            secret_data[i], _, tags[i] = utils.encrypt(key, secret_data[i], nonce=nonces[i])
+            secret_data[i] = str(secret_data[i])
+
+        # TODO 时间
+        secret = Secret.create(platform=secret_data[0], username=secret_data[1], password=secret_data[2], note=secret_data[3],
+                               create_time=datetime.datetime.now(), update_time=datetime.datetime.now())
+
+        # TODO 加密 key nonce tag
+        nonce = reduce(lambda x, y: x + y, nonces)
+        tag = reduce(lambda x, y: x + y, tags)
+        encrypt = Encrypt.create(secret_id=secret.id, key=key, nonce=nonce, tag=tag)
         print(f'platform: {platform}, username: {username}, password: {password}, note: {note}')
 
     def removePassword(self, identifier):
@@ -146,9 +153,11 @@ class Service:
         return self.repo.query(identifier=identifier)
 
     def ls(self):
-        data = self.repo.getAllRecords()
-        for identifier in data:
-            print('\t'.join(data[identifier][:4]))
+        query = (Secret.select(Secret, Encrypt).join(Encrypt, on=(Secret.id == Encrypt.secret_id)))
+        print(query.sql())
+        for item in query:
+            # TODO 解密
+            print(item.platform, item.username, item.password, item.encrypt.key)
 
 
 service = Service()
