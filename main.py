@@ -114,7 +114,7 @@ class CLI:
                     params = self._parseParams(tmp[1:])
                 print(cmd_name, params)
                 if cmd_name in self.command_map:
-                    print(self.is_login, self.time_checker.inactive)
+                    print(f'已登录: {self.is_login}, 已过期: {self.time_checker.inactive}')
                     cmd = self.command_map[cmd_name]
 
                     # 帮助
@@ -136,10 +136,12 @@ class CLI:
                                 self.is_login = True
                                 self.time_checker.initTimer()
                                 self.time_checker.startTimer()
+                                print('登录成功')
                             else:
                                 self.logout()
+                                print('登录失败')
                         else:
-                            print('Please login')
+                            print('请先登录')
                     else:
                         # 已登录情景，过滤登录命令
                         if not isinstance(cmd, command.LoginCmd):
@@ -149,7 +151,7 @@ class CLI:
                             if isinstance(cmd, command.LogoutCmd):
                                 self.logout()
                 else:
-                    print('Unknown command')
+                    print('未知的命令')
             except Exception as e:
                 self.console.print(traceback.format_exc(), style='red')
 

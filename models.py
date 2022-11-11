@@ -4,9 +4,14 @@
 @Author: csc
 @Date : 2022/11/9
 """
+import os.path
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+db_path = os.path.join(BASE_DIR, "secrets.db")
+
 from peewee import *
 
-db = SqliteDatabase('secrets.db', pragmas=[('foreign_keys', 'on')])
+db = SqliteDatabase(db_path, pragmas=[('foreign_keys', 'on')])
 db.connect()
 
 
@@ -17,7 +22,8 @@ class BaseModel(Model):
 
 # 用于登录
 class User(BaseModel):
-    pass
+    id = AutoField()
+    password = TextField()
 
 
 class Secret(BaseModel):
@@ -39,5 +45,6 @@ class Encrypt(BaseModel):
 
 
 if __name__ == '__main__':
+    User.create_table()
     Secret.create_table()
     Encrypt.create_table()

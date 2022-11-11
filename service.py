@@ -11,7 +11,7 @@ from Cryptodome.Hash import BLAKE2b
 from Cryptodome.Random import get_random_bytes
 import datetime
 
-from models import Secret, Encrypt
+from models import User, Secret, Encrypt
 import utils
 
 
@@ -103,8 +103,14 @@ class Service:
     def logout(self):
         self.key = b''
 
-    def login(self, key: str):
+    def login(self, password: str, key: str):
         print('login')
+        password = utils.hashUpdateDigest(BLAKE2b.new(digest_bits=128), password).encode()
+        if not User.select().exists():
+            User.create(password=password)
+        else:
+            if not User.select().where(User.password == password).exists():
+                return False
         self.key = utils.hashUpdateDigest(BLAKE2b.new(digest_bits=128), key).encode()
         return True
 
