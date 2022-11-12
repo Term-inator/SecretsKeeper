@@ -103,15 +103,15 @@ class Service:
     def logout(self):
         self.key = b''
 
-    def login(self, password: str, key: str):
+    def login(self, key1: str, key2: str):
         print('login')
-        password = utils.hashUpdateDigest(BLAKE2b.new(digest_bits=128), password).encode()
+        self.key = utils.hashUpdateDigest(BLAKE2b.new(digest_bits=128), key1 + key2).encode()
         if not User.select().exists():
-            User.create(password=password)
+            User.create(key=key1)
+            User.create(key=key2)
         else:
-            if not User.select().where(User.password == password).exists():
+            if User.select().where((User.key == key1) | (User.key == key2)).count() != 2:
                 return False
-        self.key = utils.hashUpdateDigest(BLAKE2b.new(digest_bits=128), key).encode()
         return True
 
     def generatePassword(self, length: int = 10, strength_level: int = 0b1111, ban_char: List[str] = None):
@@ -121,7 +121,7 @@ class Service:
     def addPassword(self, platform: str, username: str, password: str, note=''):
         key = get_random_bytes(32)
 
-        secret_data = [platform, username, password, note]
+        secret_data = [username, password]
         n = len(secret_data)
         nonces = [get_random_bytes(32) for i in range(n)]
         tags = [b'' for i in range(n)]
@@ -129,8 +129,7 @@ class Service:
             secret_data[i], _, tags[i] = utils.encrypt(key, secret_data[i], nonce=nonces[i])
             secret_data[i] = str(secret_data[i])
 
-        # TODO 时间
-        secret = Secret.create(platform=secret_data[0], username=secret_data[1], password=secret_data[2], note=secret_data[3],
+        secret = Secret.create(platform=platform, username=secret_data[0], password=secret_data[1], note=note,
                                create_time=datetime.datetime.now(), update_time=datetime.datetime.now())
 
         # TODO 加密 key nonce tag

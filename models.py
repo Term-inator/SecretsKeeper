@@ -23,7 +23,7 @@ class BaseModel(Model):
 # 用于登录
 class User(BaseModel):
     id = AutoField()
-    password = TextField()
+    key = TextField()
 
 
 class Secret(BaseModel):

@@ -123,13 +123,13 @@ class LoginCmd(Command):
         super().__init__()
 
         self.addParams([
-            Parameter('password', '登录密码', str, Source.INPUT),
-            Parameter('key', '秘钥', str, Source.INPUT)
+            Parameter('key1', '秘钥1', str, Source.INPUT),
+            Parameter('key2', '秘钥2', str, Source.INPUT)
         ])
 
     def execute(self, params: Dict[str, str | bool | List[str]]) -> bool:
         _params = self.parseParams(params)
-        return service.login(_params['password'], _params['key'])
+        return service.login(_params['key1'], _params['key2'])
 
 
 class LogoutCmd(Command):
